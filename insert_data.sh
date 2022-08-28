@@ -12,28 +12,41 @@ echo $($PSQL "TRUNCATE teams, games")
 
 cat games.csv | while IFS="," read YEAR ROUND WINNER OPPONENT WINNER_G OPPONENT_G
 do
-  if [[ $WINNER != winner && $OPPONENT != opponent ]]
-  then
-  $($PSQL "INSERT INTO teams(name) VALUES ('$WINNER')")
-  $($PSQL "INSERT INTO teams(name) VALUES ('$OPPONENT')")
+  TEAMS=$($PSQL "SELECT name FROM teams WHERE name='$WINNER'")
+  if [[ $WINNER != "winner" ]]
+    then
+    if [[ -z $TEAMS ]]
+      then
+      INSERT_TEAM=$($PSQL "INSERT INTO teams(name) VALUES('$WINNER')")
+        if [[ INSERT_TEAM == "INSERT 0 1" ]]
+        then
+          echo Inserted into teams, $WINNER
+      fi
+    fi
   fi
-  
+
+  TEAMSO=$($PSQL "SELECT name FROM teams WHERE name='$OPPONENT'")
+  if [[ $OPPONENT != "opponent" ]]
+    then
+    if [[ -z $TEAMSO ]]
+      then
+      INSERT_TEAM2=$($PSQL "INSERT INTO teams(name) VALUES('$OPPONENT')")
+        if [[ INSERT_TEAM2 == "INSERT 0 1" ]]
+        then
+          echo Inserted into teams, $OPPONENT
+      fi
+    fi
+  fi
+
+  TEAM_ID_W=$($PSQL "SELECT team_id FROM teams WHERE name='$WINNER'")
+  TEAM_ID_O=$($PSQL "SELECT team_id FROM teams WHERE name='$OPPONENT'")
+
+  if [[ -n $TEAM_ID_W || -n $TEAM_ID_O ]]
+  then
+    if [[ $YEAR != "year"]]
+    then
+      INSERT_GAMES=$($PSQL "INSERT INTO games(year, round, winner_id, opponent_id, winner_goals, opponent_goals) VALUES($YEAR, '$ROUND', $TEAM_ID_W, $TEAM_ID_O, $WINNER_G, $OPPONENT_G)")
+    fi
+  fi
+
 done
-
-
-cat games.csv | while IFS="," read YEAR ROUND WINNER OPPONENT WINNER_G OPPONENT_G
-do
-  if [[ $WINNER != winner && $OPPONENT != opponent && $YEAR != year && $ROUND != round && $WINNER_G != winner_goals && $OPPONENT_G != opponent_goals ]]
-  then
-  $($PSQL "INSERT INTO games(year, round, winner_id, opponent_id, winner_goals, opponent_goals)
-           VALUES ($YEAR, '$ROUND', $($PSQL "SELECT team_id FROM teams WHERE name='$WINNER'"), $($PSQL "SELECT team_id FROM teams WHERE name='$OPPONENT'"), 
-           $WINNER_G, $OPPONENT_G )")
-
-  #echo "$($PSQL "SELECT team_id FROM teams WHERE name='$WINNER'")"
-  #echo "$($PSQL "SELECT team_id FROM teams WHERE name='$OPPONENT'")"
-
-  
-  fi
-done 
-
-
