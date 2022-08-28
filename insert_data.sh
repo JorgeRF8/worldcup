@@ -30,8 +30,8 @@ do
     then
     if [[ -z $TEAMSO ]]
       then
-      INSERT_TEAM2=$($PSQL "INSERT INTO teams(name) VALUES('$OPPONENT')")
-        if [[ INSERT_TEAM2 == "INSERT 0 1" ]]
+      INSERT_TEAMO=$($PSQL "INSERT INTO teams(name) VALUES('$OPPONENT')")
+        if [[ INSERT_TEAMO == "INSERT 0 1" ]]
         then
           echo Inserted into teams, $OPPONENT
       fi
